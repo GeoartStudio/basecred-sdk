@@ -1,0 +1,14 @@
+/**
+ * Availability states per Phase 0 spec.
+ * Each source MUST declare exactly one state.
+ */
+export type AvailabilityState =
+  | 'available'    // profile exists and data fetched
+  | 'not_found'    // no profile exists
+  | 'unlinked'     // identity exists but is not linked
+  | 'error';       // API error or failure
+
+export interface Availability {
+  ethos: AvailabilityState;
+  talent: AvailabilityState;
+}
