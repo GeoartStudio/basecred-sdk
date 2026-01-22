@@ -6,10 +6,13 @@
  * - MUST NOT contain business rules
  * - MUST NOT perform authorization or validation
  *
- * Per Phase 1 spec:
- * - builderScore = points
- * - verifiedBuilder = points > 0
- * - Ignore ranking and scorer variants
+ * Per Phase 2 spec:
+ * - Uses /scores endpoint to fetch all scores
+ * - Maps builder_score → builderScore
+ * - Maps creator_score → creatorScore
+ * - Ignores undocumented scores (e.g., builder_score_2025)
+ * - verifiedBuilder = builderScore > 0
+ * - verifiedCreator = creatorScore > 0
  */
 import type { TalentConfig } from '../types/config.js';
 import type { TalentFacet } from '../types/talent.js';

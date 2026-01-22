@@ -10,6 +10,10 @@
  * - No interpretation, no judgment
  * - Partial responses are valid
  * - Absence must always be explicit
+ *
+ * Per BASECRED_TIER.md:
+ * - Level derivation is enabled by default
+ * - Levels are applied after score assembly
  */
 import type { SDKConfig } from '../types/config.js';
 import type { UnifiedProfile } from '../types/unified.js';

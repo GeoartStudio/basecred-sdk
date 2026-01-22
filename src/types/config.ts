@@ -14,7 +14,12 @@ export interface TalentConfig {
   apiKey: string;         // Required for Talent Protocol
 }
 
+export interface LevelConfig {
+  enabled: boolean;  // default: true
+}
+
 export interface SDKConfig {
   ethos: EthosConfig;
   talent: TalentConfig;
+  levels?: LevelConfig;  // Optional, defaults to { enabled: true }
 }

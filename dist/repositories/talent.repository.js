@@ -6,14 +6,21 @@
  * - MUST NOT contain business rules
  * - MUST NOT perform authorization or validation
  *
- * Per Phase 1 spec:
- * - builderScore = points
- * - verifiedBuilder = points > 0
- * - Ignore ranking and scorer variants
+ * Per Phase 2 spec:
+ * - Uses /scores endpoint to fetch all scores
+ * - Maps builder_score → builderScore
+ * - Maps creator_score → creatorScore
+ * - Ignores undocumented scores (e.g., builder_score_2025)
+ * - verifiedBuilder = builderScore > 0
+ * - verifiedCreator = creatorScore > 0
  */
+// Known score slugs per Phase 2 spec
+const BUILDER_SCORE_SLUG = 'builder_score';
+const CREATOR_SCORE_SLUG = 'creator_score';
 export async function fetchTalentScore(address, config) {
     try {
-        const url = `${config.baseUrl}/score?id=${address}&account_source=wallet`;
+        // Phase 2: Use /scores endpoint to fetch all scores
+        const url = `${config.baseUrl}/scores?id=${address}&account_source=wallet`;
         const response = await fetch(url, {
             method: 'GET',
             headers: {
@@ -25,19 +32,35 @@ export async function fetchTalentScore(address, config) {
             return { availability: 'error' };
         }
         const data = (await response.json());
-        if (!data || !data.score) {
+        if (!data || !data.scores || data.scores.length === 0) {
             return { availability: 'not_found' };
         }
-        const points = data.score.points;
+        // Filter and map known scores only
+        const builderScoreItem = data.scores.find(s => s.slug === BUILDER_SCORE_SLUG);
+        const creatorScoreItem = data.scores.find(s => s.slug === CREATOR_SCORE_SLUG);
+        // If neither known score exists, treat as not found
+        if (!builderScoreItem && !creatorScoreItem) {
+            return { availability: 'not_found' };
+        }
+        // Build data object with available scores
+        const talentData = {
+            builderScore: builderScoreItem?.points ?? 0,
+            ...(creatorScoreItem ? { creatorScore: creatorScoreItem.points } : {}),
+        };
+        // Build signals object
+        const talentSignals = {
+            verifiedBuilder: (builderScoreItem?.points ?? 0) > 0,
+            ...(creatorScoreItem ? { verifiedCreator: creatorScoreItem.points > 0 } : {}),
+        };
+        // Use most recent last_calculated_at from available scores
+        const lastUpdatedAt = builderScoreItem?.last_calculated_at
+            ?? creatorScoreItem?.last_calculated_at
+            ?? null;
         const facet = {
-            data: {
-                builderScore: points,
-            },
-            signals: {
-                verifiedBuilder: points > 0,
-            },
+            data: talentData,
+            signals: talentSignals,
             meta: {
-                lastUpdatedAt: data.score.last_calculated_at ?? null,
+                lastUpdatedAt,
             },
         };
         return { availability: 'available', facet };

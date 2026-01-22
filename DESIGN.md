@@ -28,11 +28,14 @@ Reputation is represented as **independent facets**, not a verdict.
 |-------|--------|---------|
 | Social credibility | Ethos Network | How others relate to this person |
 | Builder credibility | Talent Protocol | Evidence of building over time |
+| Creator credibility | Talent Protocol | Evidence of creating over time |
 
 Facets are:
 - **Parallel** — neither dominates the other
 - **Composable** — consumers combine as needed
 - **Non-hierarchical** — no implicit ranking
+
+Builder and Creator are **parallel axes** within the Talent facet — a wallet may have one, both, or neither.
 
 ---
 
@@ -66,6 +69,7 @@ These fields exist in source APIs but are **intentionally not exposed**:
 | `XP` | Ethos | Activity farming signal |
 | `percentile` | Ethos | Implies ranking |
 | `rank_position` | Talent | Implies competition |
+| `builder_score_2025` | Talent | Undocumented score variant |
 
 ---
 
@@ -104,9 +108,9 @@ All criteria passed.
 
 ## Schema Stability
 
-**Status: Frozen**
+**Status: v0.3.0 — Score Expansion**
 
-The schema is locked. No new fields, interpretations, or semantic changes will be introduced without a major version bump.
+Phase 2 complete. Builder and Creator scores are now parallel axes within the Talent facet. All new fields are optional and backwards compatible.
 
 ---
 
@@ -114,12 +118,14 @@ The schema is locked. No new fields, interpretations, or semantic changes will b
 
 ```
 src/
-├── types/           # Locked schema definitions
+├── types/           # Schema definitions
 ├── repositories/    # Data access (Ethos, Talent)
+├── levels/          # Level derivation policies (ethos@v1, builder@v1, creator@v1)
 └── use-cases/       # Business logic (getUnifiedProfile)
 ```
 
 **Layer rules:**
 - Types define the contract
-- Repositories fetch and map data
+- Repositories fetch and map data (no business logic)
+- Levels derive semantic meaning from scores
 - Use-cases orchestrate without interpretation

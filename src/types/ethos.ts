@@ -9,6 +9,8 @@
  * - ranking
  */
 
+import type { BaseCredLevel } from './level.js';
+
 export interface EthosReviews {
   positive: number;
   neutral: number;
@@ -19,6 +21,7 @@ export interface EthosData {
   score: number;
   vouchesReceived: number;
   reviews: EthosReviews;
+  credibilityLevel?: BaseCredLevel;  // Optional: derived when levels.enabled
 }
 
 export interface EthosSignals {

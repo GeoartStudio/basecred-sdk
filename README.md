@@ -7,7 +7,8 @@ This SDK exists to make reputation data observable without turning it into judgm
 ## What This SDK Does
 
 - Fetches Ethos social credibility signals (vouches, reviews, raw score)
-- Fetches Talent Protocol builder credibility (builder score)
+- Fetches Talent Protocol builder and creator credibility (builder score, creator score)
+- Derives semantic levels from scores (enabled by default)
 - Returns a unified, neutral profile
 - Explicitly declares absence and failure states
 
@@ -47,6 +48,17 @@ const profile = await getUnifiedProfile(
     },
   }
 );
+
+// Level derivation is enabled by default.
+// To disable level derivation:
+const profileWithoutLevels = await getUnifiedProfile(
+  '0xabc...',
+  {
+    ethos: { /* ... */ },
+    talent: { /* ... */ },
+    levels: { enabled: false },
+  }
+);
 ```
 
 **Note:**
@@ -67,6 +79,12 @@ const profile = await getUnifiedProfile(
   "ethos": {
     "data": {
       "score": 1732,
+      "credibilityLevel": {
+        "value": 1732,
+        "level": "Established",
+        "levelSource": "sdk",
+        "levelPolicy": "ethos@v1"
+      },
       "vouchesReceived": 5,
       "reviews": {
         "positive": 12,
@@ -86,17 +104,77 @@ const profile = await getUnifiedProfile(
   },
   "talent": {
     "data": {
-      "builderScore": 812
+      "builderScore": 196,
+      "builderLevel": {
+        "value": 196,
+        "level": "Expert",
+        "levelSource": "sdk",
+        "levelPolicy": "builder@v1"
+      },
+      "creatorScore": 97,
+      "creatorLevel": {
+        "value": 97,
+        "level": "Established",
+        "levelSource": "sdk",
+        "levelPolicy": "creator@v1"
+      }
     },
     "signals": {
-      "verifiedBuilder": true
+      "verifiedBuilder": true,
+      "verifiedCreator": true
     },
     "meta": {
-      "lastUpdatedAt": "2026-01-18T09:11:00Z"
+      "lastUpdatedAt": "2026-01-22T15:22:46Z"
     }
   }
 }
 ```
+
+### Level Derivation
+
+The SDK derives semantic levels from raw scores using documented upstream protocol thresholds.
+
+**Ethos Credibility Levels** (`ethos@v1`):
+
+| Score | Level |
+|-------|-------|
+| 0-799 | Untrusted |
+| 800-1199 | Questionable |
+| 1200-1399 | Neutral |
+| 1400-1599 | Known |
+| 1600-1799 | Established |
+| 1800-1999 | Reputable |
+| 2000-2199 | Exemplary |
+| 2200-2399 | Distinguished |
+| 2400-2599 | Revered |
+| 2600-2800 | Renowned |
+
+**Talent Builder Levels** (`builder@v1`):
+
+| Score | Level |
+|-------|-------|
+| 0-39 | Novice |
+| 40-79 | Apprentice |
+| 80-119 | Practitioner |
+| 120-169 | Advanced |
+| 170-249 | Expert |
+| 250+ | Master |
+
+**Talent Creator Levels** (`creator@v1`):
+
+| Score | Level |
+|-------|-------|
+| 0-39 | Emerging |
+| 40-79 | Growing |
+| 80-119 | Established |
+| 120-169 | Accomplished |
+| 170-249 | Prominent |
+| 250+ | Elite |
+
+Level derivation is:
+- **Enabled by default** — set `levels: { enabled: false }` to disable
+- **Deterministic** — same score always maps to same level
+- **Versioned** — policy identifier included in output (e.g., `ethos@v1`)
 
 ### Availability States
 
@@ -136,9 +214,9 @@ All failures are surfaced explicitly via the `availability` field for each sourc
 
 ## Status
 
-**Feasibility (Frozen)**
+**v0.3.0 — Score Expansion**
 
-The schema is locked. No new fields, interpretations, or semantic changes.
+Phase 2 complete. The SDK now supports both Builder and Creator scores from Talent Protocol as parallel credibility axes.
 
 ## License
 
