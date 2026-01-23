@@ -250,6 +250,10 @@ All failures are surfaced explicitly via the `availability` field for each sourc
 
 ## Changelog
 
+**v0.5.1 — Documentation**
+
+Pre-publish checklist, cleaned up comments, updated docs.
+
 **v0.5.0 — Time Semantics**
 
 The SDK now computes time-based fields (days active, recency buckets) from upstream timestamps.

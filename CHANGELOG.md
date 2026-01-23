@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.5.1] — 2026-01-23
+
+### Added
+- Pre-publish checklist script (`scripts/prepublish-check.js`)
+
+### Changed
+- Cleaned up internal comments (removed external references)
+- Updated documentation (README, DESIGN, CHANGELOG)
+
+---
+
 ## [0.5.0] — 2026-01-23
 
 ### Added
