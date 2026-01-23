@@ -126,7 +126,7 @@ The SDK computes derived time fields to answer temporal questions:
 
 ## Schema Stability
 
-**Status: v0.5.1**
+**Status: v0.5.2**
 
 The SDK computes time-based fields from upstream timestamps. All fields are optional and backwards compatible.
 

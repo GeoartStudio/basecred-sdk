@@ -250,6 +250,10 @@ All failures are surfaced explicitly via the `availability` field for each sourc
 
 ## Changelog
 
+**v0.5.2 — Bug Fix**
+
+Talent API 404 now correctly maps to `'not_found'` instead of `'error'`.
+
 **v0.5.1 — Documentation**
 
 Pre-publish checklist, cleaned up comments, updated docs.

@@ -14,6 +14,9 @@ export async function fetchTalentScore(address, config) {
             },
         });
         if (!response.ok) {
+            if (response.status === 404) {
+                return { availability: 'not_found' };
+            }
             return { availability: 'error' };
         }
         const data = (await response.json());

@@ -43,6 +43,9 @@ export async function fetchTalentScore(
     });
 
     if (!response.ok) {
+      if (response.status === 404) {
+        return { availability: 'not_found' };
+      }
       return { availability: 'error' };
     }
 

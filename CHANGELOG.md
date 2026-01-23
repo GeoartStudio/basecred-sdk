@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.5.2] — 2026-01-23
+
+### Fixed
+- Talent API 404 responses now correctly map to `'not_found'` instead of `'error'`
+  - Addresses without Talent profiles show "Not found" instead of "Error"
+  - Consistent semantic behavior with Ethos API handling
+
+---
+
 ## [0.5.1] — 2026-01-23
 
 ### Added
