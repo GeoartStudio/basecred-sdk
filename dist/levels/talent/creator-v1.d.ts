@@ -5,10 +5,6 @@
  * Score range: 0+ (uncapped)
  * Levels are absolute score thresholds, not percentiles.
  *
- * Per Phase 2:
- * - Same thresholds as Builder Score
- * - Different labels per Talent Protocol docs
- *
  * IMMUTABLE: This file MUST NOT be modified.
  * Changes require a new version (creator-v2.ts).
  */

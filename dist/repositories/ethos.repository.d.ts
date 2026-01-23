@@ -1,10 +1,5 @@
 /**
  * Ethos Repository — Data access layer for Ethos API.
- *
- * Per CLAUDE.md:
- * - Fetches and maps raw API data to domain types
- * - MUST NOT contain business rules
- * - MUST NOT perform authorization or validation
  */
 import type { EthosConfig } from '../types/config.js';
 import type { EthosFacet } from '../types/ethos.js';

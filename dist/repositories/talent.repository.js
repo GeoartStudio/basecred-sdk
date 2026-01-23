@@ -1,25 +1,10 @@
 /**
  * Talent Repository — Data access layer for Talent Protocol API.
- *
- * Per CLAUDE.md:
- * - Fetches and maps raw API data to domain types
- * - MUST NOT contain business rules
- * - MUST NOT perform authorization or validation
- *
- * Per Phase 2 spec:
- * - Uses /scores endpoint to fetch all scores
- * - Maps builder_score → builderScore
- * - Maps creator_score → creatorScore
- * - Ignores undocumented scores (e.g., builder_score_2025)
- * - verifiedBuilder = builderScore > 0
- * - verifiedCreator = creatorScore > 0
  */
-// Known score slugs per Phase 2 spec
 const BUILDER_SCORE_SLUG = 'builder_score';
 const CREATOR_SCORE_SLUG = 'creator_score';
 export async function fetchTalentScore(address, config) {
     try {
-        // Phase 2: Use /scores endpoint to fetch all scores
         const url = `${config.baseUrl}/scores?id=${address}&account_source=wallet`;
         const response = await fetch(url, {
             method: 'GET',
@@ -61,6 +46,7 @@ export async function fetchTalentScore(address, config) {
             signals: talentSignals,
             meta: {
                 lastUpdatedAt,
+                lastUpdatedDaysAgo: null, // Computed in use-case
             },
         };
         return { availability: 'available', facet };

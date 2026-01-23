@@ -1,6 +1,5 @@
 /**
- * UnifiedProfile — The locked Phase 0 schema.
- * This is THE product.
+ * UnifiedProfile — The core SDK response type.
  *
  * Rules:
  * - Partial responses are valid (ethos/talent may be absent)

@@ -1,14 +1,5 @@
 /**
  * Talent Protocol Creator Level Policy v1 Tests
- *
- * Per BASECRED_TIER.md:
- * - Unit tests covering all boundary values
- * - Snapshot tests for level mappings
- * - Explicit references to the policy version under test
- *
- * Per Phase 2:
- * - Same thresholds as Builder Score
- * - Different labels per Talent Protocol docs
  */
 
 import { describe, it, expect } from 'vitest';

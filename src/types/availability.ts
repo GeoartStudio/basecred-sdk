@@ -1,6 +1,5 @@
 /**
- * Availability states per Phase 0 spec.
- * Each source MUST declare exactly one state.
+ * Availability states. Each source declares exactly one state.
  */
 export type AvailabilityState =
   | 'available'    // profile exists and data fetched

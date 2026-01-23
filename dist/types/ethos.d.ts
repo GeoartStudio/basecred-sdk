@@ -1,12 +1,5 @@
 /**
  * Ethos facet — Social credibility.
- * "How others relate to this person"
- *
- * FORBIDDEN fields (per Phase 1):
- * - influenceFactor
- * - XP
- * - percentile
- * - ranking
  */
 import type { BaseCredLevel } from './level.js';
 export interface EthosReviews {
@@ -28,6 +21,7 @@ export interface EthosMeta {
     firstSeenAt: string | null;
     lastUpdatedAt: string | null;
     activeSinceDays: number | null;
+    lastUpdatedDaysAgo: number | null;
 }
 export interface EthosFacet {
     data: EthosData;

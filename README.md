@@ -9,6 +9,7 @@ This SDK exists to make reputation data observable without turning it into judgm
 - Fetches Ethos social credibility signals (vouches, reviews, raw score)
 - Fetches Talent Protocol builder and creator credibility (builder score, creator score)
 - Derives semantic levels from scores (enabled by default)
+- Computes time semantics (days active, recency buckets)
 - Returns a unified, neutral profile
 - Explicitly declares absence and failure states
 
@@ -97,9 +98,10 @@ const profileWithoutLevels = await getUnifiedProfile(
       "hasVouches": true
     },
     "meta": {
-      "firstSeenAt": null,
-      "lastUpdatedAt": null,
-      "activeSinceDays": null
+      "firstSeenAt": "2024-03-15T10:00:00Z",
+      "lastUpdatedAt": "2026-01-20T14:30:00Z",
+      "activeSinceDays": 679,
+      "lastUpdatedDaysAgo": 3
     }
   },
   "talent": {
@@ -124,8 +126,17 @@ const profileWithoutLevels = await getUnifiedProfile(
       "verifiedCreator": true
     },
     "meta": {
-      "lastUpdatedAt": "2026-01-22T15:22:46Z"
+      "lastUpdatedAt": "2026-01-22T15:22:46Z",
+      "lastUpdatedDaysAgo": 1
     }
+  },
+  "recency": {
+    "bucket": "recent",
+    "windowDays": 30,
+    "lastUpdatedDaysAgo": 1,
+    "derivedFrom": ["talent"],
+    "computedAt": "2026-01-23T12:00:00Z",
+    "policy": "recency@v1"
   }
 }
 ```
@@ -176,6 +187,31 @@ Level derivation is:
 - **Deterministic** — same score always maps to same level
 - **Versioned** — policy identifier included in output (e.g., `ethos@v1`)
 
+### Time Semantics
+
+The SDK computes time-based fields from timestamps:
+
+| Field | Source | Description |
+|-------|--------|-------------|
+| `ethos.meta.activeSinceDays` | `firstSeenAt` | Days since profile creation |
+| `ethos.meta.lastUpdatedDaysAgo` | `lastUpdatedAt` | Days since last profile update |
+| `talent.meta.lastUpdatedDaysAgo` | `lastUpdatedAt` | Days since score recalculation |
+
+### Recency
+
+Profile-level data freshness indicator (`recency@v1`):
+
+| Bucket | Condition |
+|--------|-----------|
+| `recent` | Updated within 30 days |
+| `stale` | Updated 31-90 days ago |
+| `dormant` | Updated more than 90 days ago |
+
+Recency is:
+- Derived from the most recently updated facet
+- Omitted if no facet has `lastUpdatedAt`
+- Computed at query time (UTC)
+
 ### Availability States
 
 Each source declares exactly one state:
@@ -212,11 +248,19 @@ This SDK never throws on valid input.
 
 All failures are surfaced explicitly via the `availability` field for each source. Consumers should check `availability.ethos` and `availability.talent` to determine data presence.
 
-## Status
+## Changelog
 
-**v0.3.0 — Score Expansion**
+**v0.5.0 — Time Semantics**
 
-Phase 2 complete. The SDK now supports both Builder and Creator scores from Talent Protocol as parallel credibility axes.
+The SDK now computes time-based fields (days active, recency buckets) from upstream timestamps.
+
+**v0.4.0 — Ethos Timestamps**
+
+Ethos profile creation and update times now exposed via `firstSeenAt` and `lastUpdatedAt`.
+
+**v0.3.0 — Creator Score**
+
+Talent facet expanded with `creatorScore` and `creatorLevel` as parallel axes to builder credibility.
 
 ## License
 

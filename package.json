@@ -1,6 +1,6 @@
 {
   "name": "basecred-sdk",
-  "version": "0.3.0",
+  "version": "0.5.0",
   "description": "A neutral SDK that fetches and assembles reputation data from Ethos Network and Talent Protocol without interpretation, ranking, or judgment.",
   "type": "module",
   "main": "./dist/index.js",
@@ -19,7 +19,8 @@
     "build": "tsc",
     "test": "vitest run",
     "test:watch": "vitest",
-    "prepublishOnly": "npm run build"
+    "prepublish:check": "node scripts/prepublish-check.js",
+    "prepublishOnly": "node scripts/prepublish-check.js"
   },
   "devDependencies": {
     "@types/node": "^20.11.0",

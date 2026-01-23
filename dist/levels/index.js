@@ -1,11 +1,5 @@
 /**
  * Level derivation service.
- *
- * Per BASECRED_TIER.md:
- * - Derivation occurs after score assembly
- * - The highest matching threshold is selected
- * - No interpolation or smoothing
- * - Purely deterministic
  */
 import { ETHOS_LEVEL_POLICY_V1 } from './ethos/v1.js';
 import { BUILDER_LEVEL_POLICY_V1 } from './talent/v1.js';

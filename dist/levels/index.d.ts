@@ -1,11 +1,5 @@
 /**
  * Level derivation service.
- *
- * Per BASECRED_TIER.md:
- * - Derivation occurs after score assembly
- * - The highest matching threshold is selected
- * - No interpolation or smoothing
- * - Purely deterministic
  */
 import type { BaseCredLevel } from '../types/level.js';
 /**

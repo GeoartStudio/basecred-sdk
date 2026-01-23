@@ -1,10 +1,5 @@
 /**
  * Ethos Credibility Level Policy v1 Tests
- *
- * Per BASECRED_TIER.md:
- * - Unit tests covering all boundary values
- * - Snapshot tests for level mappings
- * - Explicit references to the policy version under test
  */
 
 import { describe, it, expect } from 'vitest';

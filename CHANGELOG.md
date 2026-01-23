@@ -1,5 +1,46 @@
 # Changelog
 
+## [0.5.0] — 2026-01-23
+
+### Added
+- **Time Semantics** — First-class time interpretation
+  - `EthosMeta.activeSinceDays` — Days since profile creation (computed from `firstSeenAt`)
+  - `EthosMeta.lastUpdatedDaysAgo` — Days since last update (computed from `lastUpdatedAt`)
+  - `TalentMeta.lastUpdatedDaysAgo` — Days since score recalculation
+- **Recency** — Profile-level data freshness indicator
+  - `Recency.bucket` — Classification: `recent` (≤30d), `stale` (31-90d), `dormant` (>90d)
+  - `Recency.windowDays` — Policy window (30 days)
+  - `Recency.lastUpdatedDaysAgo` — Minimum days ago from available facets
+  - `Recency.derivedFrom` — Sources contributing to recency (`ethos` | `talent`)
+  - `Recency.computedAt` — ISO 8601 timestamp of computation
+  - `Recency.policy` — Immutable policy version (`recency@v1`)
+
+### Characteristics
+- Time calculations are mechanical (floor, UTC only)
+- Future timestamps return 0 days ago
+- Missing timestamps result in `null` for computed fields
+- Recency computed from most recent available facet
+- Recency omitted if no facet has `lastUpdatedAt`
+
+---
+
+## [0.4.0] — 2026-01-23
+
+### Added
+- **Ethos timestamp support** — Profile creation and update times now exposed
+  - `EthosMeta.firstSeenAt` — ISO 8601 timestamp of profile creation
+  - `EthosMeta.lastUpdatedAt` — ISO 8601 timestamp of last profile update
+
+### Changed
+- Ethos repository now uses `/profiles` endpoint instead of `/users/by/address`
+- Timestamps converted from Unix seconds to ISO 8601 strings
+
+### Characteristics
+- Backward compatible — no breaking changes to public API
+- `EthosMeta.activeSinceDays` remains `null` (computed in v0.5.0)
+
+---
+
 ## [0.3.0] — 2026-01-22
 
 ### Added
@@ -17,7 +58,6 @@
 - Creator Score levels use same thresholds as Builder Score with different labels
 - All new fields are optional — existing consumers work unchanged
 - Undocumented score variants (e.g., `builder_score_2025`) are explicitly ignored
-- Per Phase 2 specification
 
 ---
 
@@ -60,8 +100,3 @@
 - Partial responses supported
 - No rankings, percentiles, or trust verdicts
 - No aggregation or interpretation logic
-- Schema locked per Phase 0 Foundation
-
-### Stability
-- Phase 1 (Feasibility) is frozen
-- No semantic changes will be introduced without a major version bump

@@ -1,14 +1,13 @@
 /**
  * Ethos Repository — Data access layer for Ethos API.
- *
- * Per CLAUDE.md:
- * - Fetches and maps raw API data to domain types
- * - MUST NOT contain business rules
- * - MUST NOT perform authorization or validation
  */
+// Convert Unix timestamp (seconds) to ISO 8601 string
+function toISOString(epochSeconds) {
+    return new Date(epochSeconds * 1000).toISOString();
+}
 export async function fetchEthosProfile(address, config) {
     try {
-        const response = await fetch(`${config.baseUrl}/api/v2/users/by/address`, {
+        const response = await fetch(`${config.baseUrl}/api/v2/profiles`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -20,13 +19,14 @@ export async function fetchEthosProfile(address, config) {
             return { availability: 'error' };
         }
         const data = (await response.json());
-        if (!data || data.length === 0) {
+        if (!data.values || data.values.length === 0) {
             return { availability: 'not_found' };
         }
-        const user = data[0];
-        if (!user) {
+        const entry = data.values[0];
+        if (!entry) {
             return { availability: 'not_found' };
         }
+        const { profile, user } = entry;
         const facet = {
             data: {
                 score: user.score,
@@ -42,9 +42,10 @@ export async function fetchEthosProfile(address, config) {
                 hasVouches: user.stats.vouch.received.count > 0,
             },
             meta: {
-                firstSeenAt: null,
-                lastUpdatedAt: null, // API doesn't provide — explicit absence over fabricated defaults
-                activeSinceDays: null,
+                firstSeenAt: toISOString(profile.createdAt),
+                lastUpdatedAt: toISOString(profile.updatedAt),
+                activeSinceDays: null, // Computed in use-case
+                lastUpdatedDaysAgo: null, // Computed in use-case
             },
         };
         return { availability: 'available', facet };

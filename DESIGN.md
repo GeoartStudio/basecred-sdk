@@ -106,11 +106,29 @@ All criteria passed.
 
 ---
 
+## Time Semantics
+
+The SDK computes derived time fields to answer temporal questions:
+
+| Field | Derived From | Question Answered |
+|-------|--------------|-------------------|
+| `activeSinceDays` | `firstSeenAt` | How long has this profile existed? |
+| `lastUpdatedDaysAgo` | `lastUpdatedAt` | How fresh is this data? |
+| `recency.bucket` | Most recent update | Is this profile active or dormant? |
+
+**Rules:**
+- All time calculations are mechanical (floor, UTC)
+- Future timestamps return 0
+- Missing timestamps result in `null`
+- Recency is omitted if no facet has `lastUpdatedAt`
+
+---
+
 ## Schema Stability
 
-**Status: v0.3.0 — Score Expansion**
+**Status: v0.5.0 — Time Semantics**
 
-Phase 2 complete. Builder and Creator scores are now parallel axes within the Talent facet. All new fields are optional and backwards compatible.
+The SDK now computes time-based fields from upstream timestamps. All new fields are optional and backwards compatible.
 
 ---
 

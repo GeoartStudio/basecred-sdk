@@ -1,23 +1,67 @@
 /**
  * Unified Profile Use Case — Orchestrates facet assembly.
- *
- * Per CLAUDE.md:
- * - Use Case orchestrates repositories
- * - MUST NOT know about HTTP, headers, or framework APIs
- * - MUST NOT perform SQL, ORM, RPC, or chain calls
- *
- * Per Phase 0:
- * - No interpretation, no judgment
- * - Partial responses are valid
- * - Absence must always be explicit
- *
- * Per BASECRED_TIER.md:
- * - Level derivation is enabled by default
- * - Levels are applied after score assembly
  */
 import { fetchEthosProfile } from '../repositories/ethos.repository.js';
 import { fetchTalentScore } from '../repositories/talent.repository.js';
 import { deriveEthosCredibilityLevel, deriveBuilderLevel, deriveCreatorLevel } from '../levels/index.js';
+// ─── Time Constants ───────────────────────────────────────────────────────────
+const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+const RECENCY_WINDOW_DAYS = 30;
+// ─── Time Helpers ─────────────────────────────────────────────────────────────
+/**
+ * Compute days elapsed since a timestamp (floor, UTC only).
+ * Returns null if timestamp is missing, 0 if timestamp is in the future.
+ */
+function computeDaysAgo(isoTimestamp) {
+    if (!isoTimestamp)
+        return null;
+    const then = new Date(isoTimestamp).getTime();
+    const now = Date.now();
+    if (then > now)
+        return 0; // Future timestamp
+    return Math.floor((now - then) / ONE_DAY_MS);
+}
+/**
+ * Derive recency bucket from days ago using fixed window policy.
+ * - recent: ≤ windowDays
+ * - stale: windowDays < days ≤ windowDays × 3
+ * - dormant: > windowDays × 3
+ */
+function computeRecencyBucket(daysAgo) {
+    if (daysAgo <= RECENCY_WINDOW_DAYS)
+        return 'recent';
+    if (daysAgo <= RECENCY_WINDOW_DAYS * 3)
+        return 'stale';
+    return 'dormant';
+}
+/**
+ * Compute profile-level recency from facet timestamps.
+ * Uses the most recent (min daysAgo) available timestamp.
+ * Returns undefined if no facet has lastUpdatedAt.
+ */
+function computeRecency(ethos, talent) {
+    const sources = [];
+    if (ethos?.meta.lastUpdatedDaysAgo !== null && ethos?.meta.lastUpdatedDaysAgo !== undefined) {
+        sources.push({ source: 'ethos', daysAgo: ethos.meta.lastUpdatedDaysAgo });
+    }
+    if (talent?.meta.lastUpdatedDaysAgo !== null && talent?.meta.lastUpdatedDaysAgo !== undefined) {
+        sources.push({ source: 'talent', daysAgo: talent.meta.lastUpdatedDaysAgo });
+    }
+    // If no sources have timestamps, omit recency
+    if (sources.length === 0)
+        return undefined;
+    // Use the most recent (smallest daysAgo) for bucket determination
+    const minDaysAgo = Math.min(...sources.map(s => s.daysAgo));
+    const derivedFrom = sources.map(s => s.source);
+    return {
+        bucket: computeRecencyBucket(minDaysAgo),
+        windowDays: RECENCY_WINDOW_DAYS,
+        lastUpdatedDaysAgo: minDaysAgo,
+        derivedFrom,
+        computedAt: new Date().toISOString(),
+        policy: 'recency@v1',
+    };
+}
 /**
  * Check if level derivation is enabled (defaults to true).
  */
@@ -45,7 +89,6 @@ function applyEthosLevel(facet, config) {
 }
 /**
  * Apply level derivation to Talent facet if enabled.
- * Per Phase 2: Both builder and creator levels are derived when scores are present.
  */
 function applyTalentLevel(facet, config) {
     if (!isLevelDerivationEnabled(config)) {
@@ -86,12 +129,34 @@ export async function getUnifiedProfile(address, config) {
         talent: talentResult.availability,
     };
     // Apply level derivation to facets (enabled by default)
-    const ethosFacet = ethosResult.availability === 'available' && ethosResult.facet
+    const ethosWithLevels = ethosResult.availability === 'available' && ethosResult.facet
         ? applyEthosLevel(ethosResult.facet, config)
         : undefined;
-    const talentFacet = talentResult.availability === 'available' && talentResult.facet
+    const talentWithLevels = talentResult.availability === 'available' && talentResult.facet
         ? applyTalentLevel(talentResult.facet, config)
         : undefined;
+    // Apply time calculations to facets
+    const ethosFacet = ethosWithLevels
+        ? {
+            ...ethosWithLevels,
+            meta: {
+                ...ethosWithLevels.meta,
+                activeSinceDays: computeDaysAgo(ethosWithLevels.meta.firstSeenAt),
+                lastUpdatedDaysAgo: computeDaysAgo(ethosWithLevels.meta.lastUpdatedAt),
+            },
+        }
+        : undefined;
+    const talentFacet = talentWithLevels
+        ? {
+            ...talentWithLevels,
+            meta: {
+                ...talentWithLevels.meta,
+                lastUpdatedDaysAgo: computeDaysAgo(talentWithLevels.meta.lastUpdatedAt),
+            },
+        }
+        : undefined;
+    // Compute profile-level recency from facet timestamps
+    const recency = computeRecency(ethosFacet, talentFacet);
     // Assemble unified profile — facets included only when available
     const profile = {
         identity: {
@@ -101,6 +166,7 @@ export async function getUnifiedProfile(address, config) {
         // Conditional inclusion: property exists only when available
         ...(ethosFacet ? { ethos: ethosFacet } : {}),
         ...(talentFacet ? { talent: talentFacet } : {}),
+        ...(recency ? { recency } : {}),
     };
     return profile;
 }

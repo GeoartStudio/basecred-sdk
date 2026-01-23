@@ -1,36 +1,50 @@
 /**
  * Ethos Repository — Data access layer for Ethos API.
- *
- * Per CLAUDE.md:
- * - Fetches and maps raw API data to domain types
- * - MUST NOT contain business rules
- * - MUST NOT perform authorization or validation
  */
 
 import type { EthosConfig } from '../types/config.js';
 import type { EthosFacet } from '../types/ethos.js';
 import type { AvailabilityState } from '../types/availability.js';
 
-// Raw API response type (internal only)
-interface EthosApiResponse {
-  id: number;
-  profileId: number;
-  score: number;
-  status: string;
-  stats: {
-    review: {
-      received: {
-        positive: number;
-        neutral: number;
-        negative: number;
+// Raw API response type for /profiles endpoint (internal only)
+interface EthosProfilesApiResponse {
+  values: Array<{
+    profile: {
+      id: number;
+      archived: boolean;
+      createdAt: number; // seconds since epoch (Unix timestamp)
+      updatedAt: number; // seconds since epoch (Unix timestamp)
+      invitesAvailable: number;
+      invitedBy: number;
+    };
+    user: {
+      id: number;
+      profileId: number | null;
+      score: number;
+      status: string;
+      stats: {
+        review: {
+          received: {
+            positive: number;
+            neutral: number;
+            negative: number;
+          };
+        };
+        vouch: {
+          given: { amountWeiTotal: number; count: number };
+          received: { amountWeiTotal: number; count: number };
+        };
       };
     };
-    vouch: {
-      received: {
-        count: number;
-      };
-    };
-  };
+  }>;
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+// Convert Unix timestamp (seconds) to ISO 8601 string
+function toISOString(epochSeconds: number): string {
+  return new Date(epochSeconds * 1000).toISOString();
 }
 
 // Repository result type
@@ -44,7 +58,7 @@ export async function fetchEthosProfile(
   config: EthosConfig
 ): Promise<EthosRepositoryResult> {
   try {
-    const response = await fetch(`${config.baseUrl}/api/v2/users/by/address`, {
+    const response = await fetch(`${config.baseUrl}/api/v2/profiles`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -57,16 +71,18 @@ export async function fetchEthosProfile(
       return { availability: 'error' };
     }
 
-    const data = (await response.json()) as EthosApiResponse[];
+    const data = (await response.json()) as EthosProfilesApiResponse;
 
-    if (!data || data.length === 0) {
+    if (!data.values || data.values.length === 0) {
       return { availability: 'not_found' };
     }
 
-    const user = data[0];
-    if (!user) {
+    const entry = data.values[0];
+    if (!entry) {
       return { availability: 'not_found' };
     }
+
+    const { profile, user } = entry;
 
     const facet: EthosFacet = {
       data: {
@@ -83,9 +99,10 @@ export async function fetchEthosProfile(
         hasVouches: user.stats.vouch.received.count > 0,
       },
       meta: {
-        firstSeenAt: null,
-        lastUpdatedAt: null,  // API doesn't provide — explicit absence over fabricated defaults
-        activeSinceDays: null,
+        firstSeenAt: toISOString(profile.createdAt),
+        lastUpdatedAt: toISOString(profile.updatedAt),
+        activeSinceDays: null,     // Computed in use-case
+        lastUpdatedDaysAgo: null,  // Computed in use-case
       },
     };
 
